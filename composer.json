@@ -1,0 +1,20 @@
+{
+  "name": "hipnolink/agentpress",
+  "description": "Give AI a Home in WordPress. Secure, structured AI agent bridge and MCP tool server for WordPress.",
+  "type": "wordpress-plugin",
+  "license": "GPL-2.0-or-later",
+  "authors": [
+    {
+      "name": "Hipnolink Team Digital",
+      "homepage": "https://www.hipnolink.com"
+    }
+  ],
+  "require": {
+    "php": ">=7.4"
+  },
+  "autoload": {
+    "psr-4": {
+      "AgentPress\\": "src/"
+    }
+  }
+}

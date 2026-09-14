@@ -1,0 +1,268 @@
+/**
+ * AgentPress Admin Stylesheet
+ */
+
+.agentpress-wrap {
+    margin-top: 20px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+}
+
+.agentpress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #fff;
+    padding: 16px 24px;
+    border-radius: 8px;
+    border: 1px solid #dcdcde;
+    margin-bottom: 20px;
+}
+
+.agentpress-branding {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.agentpress-logo-badge {
+    width: 44px;
+    height: 44px;
+    background: linear-gradient(135deg, #2271b1 0%, #135e96 100%);
+    color: #fff;
+    font-weight: 800;
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.agentpress-branding h1 {
+    font-size: 22px;
+    font-weight: 700;
+    color: #1d2327;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.agentpress-tagline {
+    margin: 2px 0 0 0;
+    color: #646970;
+    font-size: 13px;
+}
+
+.agentpress-badge {
+    background: #f0f0f1;
+    color: #2c3338;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 12px;
+    border: 1px solid #c3c4c7;
+}
+
+.agentpress-header-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #2c3338;
+}
+
+.agentpress-status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.agentpress-status-dot.online {
+    background-color: #00a32a;
+    box-shadow: 0 0 0 3px rgba(0, 163, 42, 0.2);
+}
+
+.agentpress-nav-tabs {
+    margin-bottom: 20px !important;
+}
+
+.agentpress-card {
+    background: #fff;
+    border: 1px solid #dcdcde;
+    border-radius: 8px;
+    padding: 24px;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+}
+
+.agentpress-card h2 {
+    font-size: 17px;
+    font-weight: 600;
+    margin-top: 0;
+    margin-bottom: 12px;
+    color: #1d2327;
+}
+
+.agentpress-grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+@media (max-width: 960px) {
+    .agentpress-grid-2 {
+        grid-template-columns: 1fr;
+    }
+}
+
+.agentpress-field-group {
+    margin-bottom: 16px;
+}
+
+.agentpress-field-group label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 13px;
+}
+
+.agentpress-copy-box {
+    display: flex;
+    gap: 8px;
+}
+
+.agentpress-copy-box input {
+    flex: 1;
+    font-family: monospace;
+    background: #f6f7f7;
+}
+
+.agentpress-code-block {
+    background: #282c34;
+    color: #abb2bf;
+    padding: 12px 16px;
+    border-radius: 6px;
+    font-size: 12px;
+    overflow-x: auto;
+    margin: 8px 0 0 0;
+}
+
+.agentpress-code-block code {
+    color: inherit;
+    background: transparent;
+    padding: 0;
+}
+
+.agentpress-checkbox-label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.agentpress-tag {
+    display: inline-block;
+    padding: 2px 8px;
+    font-size: 11px;
+    font-weight: 600;
+    border-radius: 4px;
+    background: #e0f2fe;
+    color: #0369a1;
+    border: 1px solid #bae6fd;
+    margin-right: 4px;
+}
+
+.agentpress-tag.active {
+    background: #dcfce7;
+    color: #15803d;
+    border-color: #bbf7d0;
+}
+
+.agentpress-tag.warning {
+    background: #fef9c3;
+    color: #854d0e;
+    border-color: #fef08a;
+}
+
+.agentpress-tag.error {
+    background: #fee2e2;
+    color: #b91c1c;
+    border-color: #fca5a5;
+}
+
+.agentpress-alert {
+    padding: 16px 20px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+    border-left: 4px solid;
+}
+
+.agentpress-alert-success {
+    background: #f0fdf4;
+    border-color: #22c55e;
+    color: #166534;
+}
+
+.agentpress-alert h3 {
+    margin-top: 0;
+    margin-bottom: 6px;
+}
+
+.agentpress-status-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+    margin-top: 16px;
+}
+
+.agentpress-status-card {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 16px;
+}
+
+.agentpress-status-card h4 {
+    margin: 0 0 8px 0;
+    font-size: 14px;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 3px 8px;
+    font-size: 11px;
+    font-weight: 700;
+    border-radius: 4px;
+    margin-bottom: 6px;
+    background: #e2e8f0;
+    color: #475569;
+}
+
+.status-badge.active {
+    background: #22c55e;
+    color: #fff;
+}
+
+.status-badge.warning {
+    background: #f59e0b;
+    color: #fff;
+}
+
+.agentpress-checklist {
+    list-style: disc;
+    padding-left: 20px;
+    line-height: 1.8;
+}
+
+.agentpress-error-text {
+    color: #dc2626;
+}
+
+.agentpress-details summary {
+    cursor: pointer;
+    color: #2271b1;
+    font-weight: 500;
+}

@@ -27,10 +27,17 @@ class Sanitizer {
         'posix_getpwuid',
         'posix_kill',
         'posix_setuid',
+        'posix_setgid',
+        'posix_seteuid',
+        'posix_setegid',
+        'posix_mkfifo',
         'apache_child_terminate',
         'curl_multi_exec',
         'parse_ini_file',
         'show_source',
+        'highlight_file',
+        'phpinfo',
+        'putenv',
     ];
 
     /**
@@ -46,6 +53,9 @@ class Sanitizer {
         'sec_key',
         'nonce',
         'db_password',
+        'authorization',
+        'bearer',
+        'private_key',
     ];
 
     /**
@@ -60,7 +70,7 @@ class Sanitizer {
         $path = str_replace(chr(0), '', $path);
         $path = trim($path);
 
-        if (empty($path)) {
+        if ($path === '') {
             return false;
         }
 
@@ -70,36 +80,66 @@ class Sanitizer {
             return false;
         }
 
-        // Handle both relative and absolute paths
-        if (strpos($path, $real_base) === 0) {
-            $target = $path;
-        } else {
-            $target = $real_base . DIRECTORY_SEPARATOR . ltrim($path, '/\\');
-        }
-
-        // Normalize separators
-        $target = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $target);
+        // Normalize base path and establish base boundary prefix
         $real_base = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $real_base);
+        $base_prefix = rtrim($real_base, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
 
-        // Disallow basic traversal patterns in string before filesystem check
-        if (strpos($path, '..' . DIRECTORY_SEPARATOR) !== false || strpos($path, '..' . '/') !== false || strpos($path, '..' . '\\') !== false) {
-            // Check if resolved path is truly within base
+        // Normalize path separators
+        $normalized_path = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $path);
+
+        // Disallow Alternate Data Streams (ADS) or invalid colons
+        if (DIRECTORY_SEPARATOR === '\\') {
+            $path_without_drive = preg_replace('/^[a-zA-Z]:/', '', $normalized_path);
+            if (strpos($path_without_drive, ':') !== false) {
+                return false;
+            }
+        } elseif (strpos($normalized_path, ':') !== false) {
+            return false;
         }
 
-        // If file exists, check realpath directly
+        // Check if path is already absolute within base boundary
+        if ($normalized_path === $real_base || strpos($normalized_path, $base_prefix) === 0) {
+            $target = $normalized_path;
+        } elseif (preg_match('/^[a-zA-Z]:/', $normalized_path)) {
+            // Windows absolute path on a different drive or directory outside base
+            return false;
+        } else {
+            $target = $base_prefix . ltrim($normalized_path, DIRECTORY_SEPARATOR);
+        }
+
+        // If file or target directory already exists, verify its realpath directly
         $real_target = realpath($target);
         if ($real_target !== false) {
-            if (strpos($real_target, $real_base) === 0) {
+            $real_target = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $real_target);
+            if (strpos($real_target, $base_prefix) === 0 || $real_target === $real_base) {
                 return $real_target;
             }
             return false;
         }
 
-        // For non-existent files (e.g. write_file), check parent directory
+        // For non-existent files (e.g. write_file in new directory), walk up to find nearest real parent
         $parent = dirname($target);
         $real_parent = realpath($parent);
-        if ($real_parent !== false && strpos($real_parent, $real_base) === 0) {
-            return $target;
+
+        while ($real_parent === false && $parent !== dirname($parent)) {
+            $parent = dirname($parent);
+            $real_parent = realpath($parent);
+        }
+
+        if ($real_parent !== false) {
+            $real_parent = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $real_parent);
+            if (strpos($real_parent, $base_prefix) === 0 || $real_parent === $real_base) {
+                // Ensure the remaining non-existent path doesn't contain directory traversal
+                $remainder = substr($target, strlen($parent));
+                $remainder = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $remainder);
+                $parts = explode(DIRECTORY_SEPARATOR, $remainder);
+                foreach ($parts as $part) {
+                    if ($part === '..') {
+                        return false;
+                    }
+                }
+                return $target;
+            }
         }
 
         return false;
@@ -129,23 +169,35 @@ class Sanitizer {
                 $token_type = $token[0];
                 $token_value = strtolower(trim($token[1]));
 
-                // Check function calls
-                if ($token_type === T_STRING) {
-                    if (in_array($token_value, self::DANGEROUS_PHP_FUNCTIONS, true)) {
+                $is_name_token = ($token_type === T_STRING)
+                    || (defined('T_NAME_FULLY_QUALIFIED') && $token_type === T_NAME_FULLY_QUALIFIED)
+                    || (defined('T_NAME_QUALIFIED') && $token_type === T_NAME_QUALIFIED)
+                    || (defined('T_NAME_RELATIVE') && $token_type === T_NAME_RELATIVE);
+
+                // Check function calls (including namespace-qualified and fully-qualified)
+                if ($is_name_token) {
+                    $func_name = strtolower(ltrim($token_value, '\\'));
+                    if (in_array($func_name, self::DANGEROUS_PHP_FUNCTIONS, true)) {
                         return [
                             'is_safe' => false,
-                            'error'   => sprintf('Security violation: Forbidden dangerous function `%s()` detected.', $token_value)
+                            'error'   => sprintf('Security violation: Forbidden dangerous function `%s()` detected.', $func_name)
                         ];
                     }
                 }
 
-                // Check backtick execution operator
-                if ($token_type === T_ENCAPSED_AND_WHITESPACE && strpos($token[1], '`') !== false) {
+                // Check eval construct
+                if ($token_type === T_EVAL) {
                     return [
                         'is_safe' => false,
-                        'error'   => 'Security violation: Execution backticks operator is strictly forbidden.'
+                        'error'   => 'Security violation: Forbidden language construct `eval()` detected.'
                     ];
                 }
+            } elseif (is_string($token) && $token === '`') {
+                // Check backtick execution operator
+                return [
+                    'is_safe' => false,
+                    'error'   => 'Security violation: Execution backticks operator is strictly forbidden.'
+                ];
             }
         }
 

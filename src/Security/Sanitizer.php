@@ -81,25 +81,36 @@ class Sanitizer {
         $target = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $target);
         $real_base = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $real_base);
 
-        // Disallow basic traversal patterns in string before filesystem check
-        if (strpos($path, '..' . DIRECTORY_SEPARATOR) !== false || strpos($path, '..' . '/') !== false || strpos($path, '..' . '\\') !== false) {
-            // Check if resolved path is truly within base
-        }
-
-        // If file exists, check realpath directly
         $real_target = realpath($target);
         if ($real_target !== false) {
-            if (strpos($real_target, $real_base) === 0) {
+            if (strpos($real_target, $real_base . DIRECTORY_SEPARATOR) === 0 || $real_target === $real_base) {
                 return $real_target;
             }
             return false;
         }
 
-        // For non-existent files (e.g. write_file), check parent directory
+        // For non-existent files (e.g. write_file in new directory), walk up to find nearest real parent
         $parent = dirname($target);
         $real_parent = realpath($parent);
-        if ($real_parent !== false && strpos($real_parent, $real_base) === 0) {
-            return $target;
+
+        while ($real_parent === false && $parent !== dirname($parent)) {
+            $parent = dirname($parent);
+            $real_parent = realpath($parent);
+        }
+
+        if ($real_parent !== false) {
+            if (strpos($real_parent, $real_base . DIRECTORY_SEPARATOR) === 0 || $real_parent === $real_base) {
+                // Ensure the remaining non-existent path doesn't contain directory traversal
+                $remainder = substr($target, strlen($parent));
+                $remainder = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $remainder);
+                $parts = explode(DIRECTORY_SEPARATOR, $remainder);
+                foreach ($parts as $part) {
+                    if ($part === '..') {
+                        return false;
+                    }
+                }
+                return $target;
+            }
         }
 
         return false;
@@ -146,6 +157,11 @@ class Sanitizer {
                         'error'   => 'Security violation: Execution backticks operator is strictly forbidden.'
                     ];
                 }
+            } else if (is_string($token) && $token === '`') {
+                return [
+                    'is_safe' => false,
+                    'error'   => 'Security violation: Execution backticks operator is strictly forbidden.'
+                ];
             }
         }
 
